@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cripto Valores e Aporte</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+  <div class="w-full max-w-2xl p-6 bg-white shadow-lg rounded-lg">
+    <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Valores Atuais de Criptomoedas</h1>
+    <button 
+      id="fetchData" 
+      class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 transition mb-6"
+    >
+      Atualizar Valores
+    </button>
+    <ul id="cryptoList" class="space-y-4">
+      <!-- Valores das criptomoedas -->
+    </ul>
+    <button 
+      id="openModal" 
+      class="mt-6 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 focus:outline-none focus:ring focus:ring-green-300 transition"
+    >
+      Fazer Aporte
+    </button>
+  </div>
+
+  <!-- Modal de Aporte -->
+  <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+      <h2 class="text-xl font-bold text-gray-800 text-center mb-6">Registrar Aporte</h2>
+      <form id="aporteForm" class="space-y-4">
+        <div>
+          <label for="valor" class="block text-sm font-medium text-gray-700">Valor do Aporte (R$)</label>
+          <input 
+            type="number" 
+            id="valor" 
+            name="valor" 
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            placeholder="Ex.: 1000"
+            required
+          />
+        </div>
+        <div>
+          <label for="data" class="block text-sm font-medium text-gray-700">Data do Aporte</label>
+          <input 
+            type="date" 
+            id="data" 
+            name="data" 
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            required
+          />
+        </div>
+        <div class="flex justify-between items-center">
+          <button 
+            type="button" 
+            id="closeModal" 
+            class="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 focus:outline-none focus:ring focus:ring-gray-300 transition"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 transition"
+          >
+            Registrar
+          </button>
+        </div>
+      </form>
+      <!-- Mensagem de Sucesso -->
+      <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded-lg">
+        Aporte registrado com sucesso!
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Funções para abrir e fechar o modal
+    const modal = document.getElementById('modal');
+    const openModal = document.getElementById('openModal');
+    const closeModal = document.getElementById('closeModal');
+
+    openModal.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+
+    closeModal.addEventListener('click', () => {
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    });
+
+    // Formulário de Aporte
+    document.getElementById('aporteForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const valor = document.getElementById('valor').value;
+      const data = document.getElementById('data').value;
+
+      // Exibe mensagem de sucesso
+      const successMessage = document.getElementById('successMessage');
+      successMessage.textContent = `Aporte de R$${parseFloat(valor).toFixed(2)} registrado para a data ${data}.`;
+      successMessage.classList.remove('hidden');
+
+      // Fecha o modal automaticamente após 2 segundos
+      setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        successMessage.classList.add('hidden');
+        document.getElementById('aporteForm').reset();
+      }, 2000);
+    });
+
+    // Função para buscar valores das criptomoedas
+    async function fetchCryptoPrices() {
+      const apiUrl = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple,cardano,solana&vs_currencies=usd";
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error("Erro ao buscar os dados.");
+        }
+        const data = await response.json();
+
+        const cryptoList = document.getElementById('cryptoList');
+        cryptoList.innerHTML = '';
+
+        for (const [crypto, value] of Object.entries(data)) {
+          const listItem = document.createElement('li');
+          listItem.className = "p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-sm flex justify-between items-center";
+          listItem.innerHTML = `
+            <span class="text-lg font-medium text-gray-700">${crypto.toUpperCase()}</span>
+            <span class="text-lg font-semibold text-gray-900">$${value.usd.toFixed(2)}</span>
+          `;
+          cryptoList.appendChild(listItem);
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Ocorreu um erro ao buscar os valores das criptomoedas.");
+      }
+    }
+
+    document.getElementById('fetchData').addEventListener('click', fetchCryptoPrices);
+    window.onload = fetchCryptoPrices;
+  </script>
+</body>
+</html>
